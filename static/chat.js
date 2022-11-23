@@ -15,7 +15,7 @@ const connect = () => {
   socket.addEventListener('message', msg => {
     const obj = JSON.parse(msg.data);
     if(obj.type === 'message') {
-      document.getElementById('fromServer').innerHTML += `${obj.data}<br />`;
+      document.getElementById('fromServer').innerHTML += `${obj.name}: ${obj.data}<br />`;
     }
     else if(obj.type === 'enter') {
       document.getElementById('fromServer').innerHTML += `${obj.data}が入室しました！<br />`;
@@ -30,6 +30,7 @@ const sendMessage = () => {
   if (socket.readyState === WebSocket.OPEN) {
     const obj = {
       type: 'message',
+      name: yourName,
       data: document.getElementById('fromClient').value,
     };
     socket.send(JSON.stringify(obj));

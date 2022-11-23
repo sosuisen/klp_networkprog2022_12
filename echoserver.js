@@ -37,8 +37,7 @@ const staticFile = (req, res) => {
 };
 
 const server = http.createServer((req, res) => {
-    console.log(req.method);
-    console.log(req.url);
+    console.log(req.method + " " + req.url);
 
     if (req.method === 'GET') {
         staticFile(req, res);
@@ -55,7 +54,6 @@ server.listen({ host, port } , () => {
     console.log(`Starting HTTP server at http://${host}:${port}/`)
 });
 
-
 // ws
 // https://www.npmjs.com/package/ws
 
@@ -66,29 +64,10 @@ const ws = new WebSocket.Server({ server });
 // const ws = new WebSocket.Server({ port });
 
 ws.on('connection', socket => {
+  
     socket.on('message', data => {
-        console.log('from client: ' + data);
+        console.log('[WebSocket] from client: ' + data);
         // メッセージを送ってきたクライアントにのみ返信
-        // socket.send(data);
-
-        // 全てのクライアントへ返信
-        /*
-        ws.clients.forEach(client => {
-            if(client.readyState === WebSocket.OPEN){
-                client.send(data);
-            }
-        });
-*/
-        // メッセージを送ってきたクライアント以外の全てのクライアントへ返信
-  
-        ws.clients.forEach(client => {
-            if(client !== socket && client.readyState === WebSocket.OPEN){
-                client.send(data);
-            }
-        });
-  
-        // 誰が入室したかを表示する仕組み
-        // 誰が退室したかを表示する仕組み
-
+        socket.send(data.toString()); // toString()しないと Blob型で送られてしまう。
     })
 });

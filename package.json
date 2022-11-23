@@ -4,7 +4,7 @@
   "description": "",
   "main": "websocket.js",
   "scripts": {
-    "start": "node websocket.js"
+    "start": "node chatserver.js"
   },
   "author": "",
   "license": "",

@@ -14,7 +14,7 @@ app.use(express.static('static'));
 // 生成されたhttp.Serverオブジェクトでlistenすること。
 // app.listenは使いません
 var server = http.createServer(app);
-server.listen({ host, port } , () => {
+server.listen({ host, port }, () => {
   console.log(`Starting Express and WebSocket server at http://${host}:${port}/`)
 });
 
@@ -36,38 +36,55 @@ ws.on('connection', socket => {
     const req = JSON.parse(data);
 
     if (req.type === 'message') {
-      // メッセージの場合
+      // 通常メッセージの場合
+
+      // bot宛か？
+      if (req.data.startsWith('@bot ')) {
+        const cmdArray = req.data.split(' ');
+        if (cmdArray.length > 1) {
+          req.name = 'bot';
+          const cmd = cmdArray[1];
+          if (cmd === 'date'){
+            req.data = Date();
+          }
+          else if (cmd === 'list'){
+            req.data = '現在の入室者は ' + Object.keys(members).join(', ');
+          }
+          else {
+            return;
+          }
+          socket.send(JSON.stringify(req));
+        }
+        // bot の場合はここで終わり。
+        return;
+      }
+
       // 全ての接続中のクライアントへ返信
-
-      // bot
-      if (req.data.startsWith('@bot date')) {
-        req.data = Date();
-        req.name = 'bot';
-        socket.send(JSON.stringify(req));
-        return;
-      }
-      else if (req.data.startsWith('@bot list')) {
-        req.data = Object.keys(members).join(', ');
-        req.name = 'bot';
-        socket.send(JSON.stringify(req));
-        return;
-      }
-
       ws.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(req));
         }
       });
     }
-    else if (req.type === 'enter' || req.type === 'leave') {
-      // 入室、退室メッセージの場合
-      if (req.type === 'enter') {
-        members[req.data] = 1;
-      }
-      else if (req.type === 'leave') {
-        // クライアントの不正な切断による退室には未対応。
-        delete members[req.data];
-      }
+    else if (req.type === 'enter') {
+      // 入室メッセージの場合
+
+      // メンバーを追加
+      members[req.name] = 1;
+
+      // 全ての接続中のクライアントへ返信
+      ws.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(req));
+        }
+      });
+    }
+    else if (req.type === 'leave') {
+      // 退室メッセージの場合
+
+      // メンバーを削除
+      // （クライアントの不正な切断による退室には未対応）
+      delete members[req.name];
 
       // メッセージを送ってきたクライアントを除く全ての接続中のクライアントへ返信
       ws.clients.forEach(client => {

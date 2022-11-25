@@ -33,8 +33,8 @@ ws.on('connection', socket => {
     console.log('[WebSocket] from client: ' + data);
     const req = JSON.parse(data);
 
-    if (req.type === 'message') {
-      // メッセージの場合
+    if (req.type === 'message' || req.type === 'enter') {
+      // 通常メッセージ・入室メッセージの場合
       // 全ての接続中のクライアントへ返信
       ws.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
@@ -42,8 +42,8 @@ ws.on('connection', socket => {
         }
       });
     }
-    else if (req.type === 'enter' || req.type === 'leave') {
-      // 入室、退室メッセージの場合
+    else if (req.type === 'leave') {
+      // 退室メッセージの場合
       // メッセージを送ってきたクライアントを除く全ての接続中のクライアントへ返信
       ws.clients.forEach(client => {
         if (client !== socket && client.readyState === WebSocket.OPEN) {

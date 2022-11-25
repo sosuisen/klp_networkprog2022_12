@@ -57,10 +57,10 @@ server.listen({ host, port } , () => {
 // ws
 // https://www.npmjs.com/package/ws
 
-// 通常のhttp.Serverインスタンスを元に作成。
+// 通常のhttp.Serverオブジェクトを元に作成。
 // 通常のhttpとWebSocketの共存が簡単にできます。
 const ws = new WebSocket.Server({ server });
-// 通常のhttp.Serverインスタンスを使わずに作成する場合はこちら。
+// 通常のhttp.Serverオブジェクトを使わずに作成する場合はこちら。
 // const ws = new WebSocket.Server({ port });
 
 ws.on('connection', socket => {

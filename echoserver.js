@@ -64,7 +64,6 @@ const ws = new WebSocket.Server({ server });
 // const ws = new WebSocket.Server({ port });
 
 ws.on('connection', socket => {
-  
     socket.on('message', data => {
         console.log('[WebSocket] from client: ' + data);
         // メッセージを送ってきたクライアントにのみ返信

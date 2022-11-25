@@ -4,7 +4,7 @@ let yourName = '';
 const connect = () => {
   socket = new WebSocket('ws://localhost:8080');
   socket.addEventListener('open', () => {
-    document.getElementById('status').innerText = '[接続済]';
+    document.getElementById('status').innerText = '[入室済]';
     const obj = {
       type: 'enter',
       name: yourName,
@@ -51,18 +51,18 @@ const enterLeaveRoom = () => {
     socket.close();
     socket = null;
     document.getElementById('yourName').disabled = false;
-    document.getElementById('enterLeaveButton').innerText = '接続';
-    document.getElementById('status').innerText = '[未接続]';  
+    document.getElementById('enterLeaveButton').innerText = '入室';
+    document.getElementById('status').innerText = '[退室中]';  
   }
   else {
     yourName = document.getElementById('yourName').value;
     if (yourName) {
       document.getElementById('yourName').disabled = true;
-      document.getElementById('enterLeaveButton').innerText = '切断';
+      document.getElementById('enterLeaveButton').innerText = '退室';
       connect();
     }
  }
 };
 
-// 接続・切断ボタン
+// 入室・退室ボタン
 document.getElementById('enterLeaveButton').addEventListener('click', enterLeaveRoom);

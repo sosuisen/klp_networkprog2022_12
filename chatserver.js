@@ -59,7 +59,7 @@ ws.on('connection', socket => {
         return;
       }
 
-      // 全ての接続中のクライアントへ返信
+      // 全ての入室中のクライアントへ返信
       ws.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(req));
@@ -72,7 +72,7 @@ ws.on('connection', socket => {
       // メンバーを追加
       members[req.name] = 1;
 
-      // 全ての接続中のクライアントへ返信
+      // 全ての入室中のクライアントへ返信
       ws.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(req));
@@ -86,7 +86,7 @@ ws.on('connection', socket => {
       // （クライアントの不正な切断による退室には未対応）
       delete members[req.name];
 
-      // メッセージを送ってきたクライアントを除く全ての接続中のクライアントへ返信
+      // メッセージを送ってきたクライアントを除く全ての入室中のクライアントへ返信
       ws.clients.forEach(client => {
         if (client !== socket && client.readyState === WebSocket.OPEN) {
           client.send(data.toString());

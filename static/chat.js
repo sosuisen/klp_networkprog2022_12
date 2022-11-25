@@ -7,7 +7,7 @@ const connect = () => {
     document.getElementById('status').innerText = '[接続済]';
     const obj = {
       type: 'enter',
-      data: yourName,
+      name: yourName,
     };
     socket.send(JSON.stringify(obj));
   });
@@ -18,10 +18,10 @@ const connect = () => {
       document.getElementById('fromServer').innerHTML += `${obj.name}: ${obj.data}<br />`;
     }
     else if(obj.type === 'enter') {
-      document.getElementById('fromServer').innerHTML += `${obj.data}が入室しました！<br />`;
+      document.getElementById('fromServer').innerHTML += `${obj.name}が入室しました！<br />`;
     }
     else if(obj.type === 'leave') {
-      document.getElementById('fromServer').innerHTML += `${obj.data}が退室しました！<br />`;
+      document.getElementById('fromServer').innerHTML += `${obj.name}が退室しました！<br />`;
     }
   });  
 };
@@ -45,7 +45,7 @@ const enterLeaveRoom = () => {
   if (socket && socket.readyState === WebSocket.OPEN) {
     const obj = {
       type: 'leave',
-      data: yourName,
+      name: yourName,
     };
     socket.send(JSON.stringify(obj));
     socket.close();

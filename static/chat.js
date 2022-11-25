@@ -1,15 +1,17 @@
 let socket;
-let yourName = '';
+let userName = '';
+
+const resetUI = () => {
+  document.getElementById('userName').disabled = false;
+  document.getElementById('enterLeaveButton').innerText = '入室';
+  document.getElementById('status').innerText = '[退室中]';  
+};
 
 const connect = () => {
-  socket = new WebSocket('ws://localhost:8080');
+  // ユーザ名をクエリ文字列にセットして送信
+  socket = new WebSocket('ws://localhost:8080/?' + encodeURIComponent(userName));
   socket.addEventListener('open', () => {
     document.getElementById('status').innerText = '[入室済]';
-    const obj = {
-      type: 'enter',
-      name: yourName,
-    };
-    socket.send(JSON.stringify(obj));
   });
 
   socket.addEventListener('message', msg => {
@@ -24,7 +26,17 @@ const connect = () => {
       document.getElementById('fromServer').innerHTML += `${obj.name}が退室しました！<br />`;
     }
   });  
+
+  socket.addEventListener('close', () => {
+    if(socket !== null) {
+      // サーバ側から切断された場合のみアラート表示
+      alert('サーバから切断されました');
+      socket = null;
+      resetUI();
+    }
+  });
 };
+
 
 const sendMessage = () => {
   if (socket.readyState === WebSocket.OPEN) {
@@ -42,26 +54,19 @@ document.getElementById('fromClient').addEventListener('change', sendMessage);
 
 const enterLeaveRoom = () => {
   if (socket && socket.readyState === WebSocket.OPEN) {
-    const obj = {
-      type: 'leave',
-      name: yourName,
-    };
-    socket.send(JSON.stringify(obj));
     socket.close();
     socket = null;
-    document.getElementById('yourName').disabled = false;
-    document.getElementById('enterLeaveButton').innerText = '入室';
-    document.getElementById('status').innerText = '[退室中]';  
+    resetUI();
   }
   else {
-    yourName = document.getElementById('yourName').value;
-    if (yourName) {
-      document.getElementById('yourName').disabled = true;
+    userName = document.getElementById('userName').value;
+    if (userName) {
+      document.getElementById('userName').disabled = true;
       document.getElementById('enterLeaveButton').innerText = '退室';
       connect();
     }
  }
 };
 
-// 接続・切断ボタン
+// 入室・退室ボタン
 document.getElementById('enterLeaveButton').addEventListener('click', enterLeaveRoom);

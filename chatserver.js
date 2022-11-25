@@ -14,7 +14,7 @@ app.use(express.static('static'));
 // 生成されたhttp.Serverオブジェクトでlistenすること。
 // app.listenは使いません
 var server = http.createServer(app);
-server.listen({ host, port } , () => {
+server.listen({ host, port }, () => {
   console.log(`Starting Express and WebSocket server at http://${host}:${port}/`)
 });
 
@@ -28,28 +28,54 @@ const ws = new WebSocket.Server({ server });
 // (ただし、通常のhttpと共存できない)
 // const ws = new WebSocket.Server({ port });
 
-ws.on('connection', socket => {
-  socket.on('message', data => {
-    console.log('[WebSocket] from client: ' + data);
-    const req = JSON.parse(data);
+ws.on('connection', (socket, req) => {
+  // 入室
+  const ip = req.socket.remoteAddress;
+  // ユーザ名を取得
+  const urlArray = req.url.split('?');
+  let userName = '';
+  if (urlArray.length > 1) {
+    userName = decodeURIComponent(urlArray[1]);
+  }
+  else {
+    socket.terminate();
+    return;
+  }
+  console.log(`[WebSocket] connected from ${userName} (${ip})`);
+  // 全ての入室中のクライアントへ送信
+  ws.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: 'enter',
+        name: userName,
+      }));
+    }
+  });
 
-    if (req.type === 'message' || req.type === 'enter') {
-      // 通常メッセージ・入室メッセージの場合
-      // 全ての入室中のクライアントへ返信
-      ws.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(data.toString());
-        }
-      });
-    }
-    else if (req.type === 'leave') {
-      // 退室メッセージの場合
-      // メッセージを送ってきたクライアントを除く全ての入室中のクライアントへ返信
-      ws.clients.forEach(client => {
-        if (client !== socket && client.readyState === WebSocket.OPEN) {
-          client.send(data.toString());
-        }
-      });
-    }
+
+  // 通常メッセージ
+  socket.on('message', data => {
+    console.log('[WebSocket] message from client: ' + data);
+    // 全ての入室中のクライアントへ返信
+    ws.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data.toString());
+      }
+    });
+  });
+
+
+  // 退室
+  socket.on('close', () => {
+    console.log(`[WebSocket] disconnected from ${userName} (${ip})`);
+    // 退室したクライアントを除く全ての入室中のクライアントへ送信
+    ws.clients.forEach(client => {
+      if (client !== socket && client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'leave',
+          name: userName,
+        }));
+      }
+    });
   })
 });

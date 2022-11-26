@@ -1,6 +1,7 @@
 let socket;
 let userName = '';
 
+// (6) 退室時のUIリセット
 const resetUI = () => {
   document.getElementById('userName').disabled = false;
   document.getElementById('enterLeaveButton').innerText = '入室';
@@ -8,12 +9,14 @@ const resetUI = () => {
 };
 
 const connect = () => {
+  // (2) 接続処理
   // ユーザ名をクエリ文字列にセットして送信
   socket = new WebSocket('ws://localhost:8080/?' + encodeURIComponent(userName));
   socket.addEventListener('open', () => {
     document.getElementById('status').innerText = '[入室済]';
   });
 
+  // (3) メッセージ受信時の処理を追加
   socket.addEventListener('message', msg => {
     const obj = JSON.parse(msg.data);
     if(obj.type === 'message') {
@@ -27,6 +30,7 @@ const connect = () => {
     }
   });  
 
+  // (4) サーバから切断されたときの処理を追加
   socket.addEventListener('close', () => {
     if(socket !== null) {
       // サーバ側から切断された場合のみアラート表示
@@ -37,7 +41,7 @@ const connect = () => {
   });
 };
 
-
+// (5) メッセージ送信処理
 const sendMessage = () => {
   if (socket.readyState === WebSocket.OPEN) {
     const obj = {
@@ -52,6 +56,7 @@ const sendMessage = () => {
 // Enterキーでメッセージ送信
 document.getElementById('fromClient').addEventListener('change', sendMessage);
 
+// (1) 入退室処理
 const enterLeaveRoom = () => {
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.close();

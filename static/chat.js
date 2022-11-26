@@ -42,7 +42,7 @@ const sendMessage = () => {
   if (socket.readyState === WebSocket.OPEN) {
     const obj = {
       type: 'message',
-      name: yourName,
+      name: userName,
       data: document.getElementById('fromClient').value,
     };
     socket.send(JSON.stringify(obj));

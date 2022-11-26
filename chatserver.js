@@ -62,7 +62,8 @@ ws.on('connection', (socket, req) => {
   // 通常メッセージ
   socket.on('message', data => {
     console.log('[WebSocket] message from client: ' + data);
-
+    const req = JSON.parse(data);
+    
     // bot宛か？
     if (req.data.startsWith('@bot ')) {
       const cmdArray = req.data.split(' ');

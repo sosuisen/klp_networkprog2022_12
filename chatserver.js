@@ -29,9 +29,9 @@ const ws = new WebSocket.Server({ server });
 // const ws = new WebSocket.Server({ port });
 
 ws.on('connection', (socket, req) => {
-  // 入室
+  // (1) 入室時の処理
   const ip = req.socket.remoteAddress;
-  // ユーザ名を取得
+  // 1-1) 入室したユーザの名前を取得
   const urlArray = req.url.split('?');
   let userName = '';
   if (urlArray.length > 1) {
@@ -42,7 +42,7 @@ ws.on('connection', (socket, req) => {
     return;
   }
   console.log(`[WebSocket] connected from ${userName} (${ip})`);
-  // 全ての入室中のクライアントへ送信
+  // 1-2) 全ての入室中のクライアントへ通知
   ws.clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify({
@@ -53,10 +53,10 @@ ws.on('connection', (socket, req) => {
   });
 
 
-  // 通常メッセージ
+  // (2) メッセージ受信時の処理を追加
   socket.on('message', data => {
     console.log('[WebSocket] message from client: ' + data);
-    // 全ての入室中のクライアントへ返信
+    // 全ての入室中のクライアントへ転送
     ws.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(data.toString());
@@ -65,10 +65,10 @@ ws.on('connection', (socket, req) => {
   });
 
 
-  // 退室
+  // (3) 退室時の処理を追加
   socket.on('close', () => {
     console.log(`[WebSocket] disconnected from ${userName} (${ip})`);
-    // 退室したクライアントを除く全ての入室中のクライアントへ送信
+    // 退室したクライアントを除く全ての入室中のクライアントへ通知
     ws.clients.forEach(client => {
       if (client !== socket && client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({

@@ -30,7 +30,7 @@ const ws = new WebSocket.Server({ server });
 
 const members = {};
 ws.on('connection', (socket, req) => {
-  // 入室
+  // （１）入室時の処理
   const ip = req.socket.remoteAddress;
   // ユーザ名を取得
   const urlArray = req.url.split('?');
@@ -59,12 +59,14 @@ ws.on('connection', (socket, req) => {
   });
 
 
-  // 通常メッセージ
+  // (2) メッセージ受信時の処理を追加
   socket.on('message', data => {
     console.log('[WebSocket] message from client: ' + data);
     const req = JSON.parse(data);
     
     // bot宛か？
+    // 発展課題 12aに対応するには、まずbot宛かどうかを判定し、
+    // その後、メッセージ本文の内容で分岐します。
     if (req.data.startsWith('@bot ')) {
       const cmdArray = req.data.split(' ');
       if (cmdArray.length > 1) {
@@ -85,22 +87,26 @@ ws.on('connection', (socket, req) => {
       return;
     }
 
+    // bot宛でないメッセージの場合
+    // 基本課題 12-1
+    // 送信元のuserNameをnameプロパティを追加
+    req.name = userName;
     // 全ての入室中のクライアントへ返信
     ws.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(data.toString());
+        client.send(JSON.stringify(req)); // JSON文字列に変換して送信
       }
     });
   });
 
 
-  // 退室
+  // (3) 退室時の処理を追加
   socket.on('close', () => {
     console.log(`[WebSocket] disconnected from ${userName} (${ip})`);
 
     // メンバーを削除
     // （クライアントの不正な切断による退室には未対応）
-    delete members[req.name];
+    delete members[userName];
 
     // 退室したクライアントを除く全ての入室中のクライアントへ送信
     ws.clients.forEach(client => {

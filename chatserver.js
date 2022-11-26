@@ -28,6 +28,7 @@ const ws = new WebSocket.Server({ server });
 // (ただし、通常のhttpと共存できない)
 // const ws = new WebSocket.Server({ port });
 
+const members = {};
 ws.on('connection', (socket, req) => {
   // 入室
   const ip = req.socket.remoteAddress;
@@ -41,6 +42,11 @@ ws.on('connection', (socket, req) => {
     socket.terminate();
     return;
   }
+
+  // メンバーを追加
+  // 同じ名前のユーザが接続してきた場合には未対応
+  members[userName] = 1;
+
   console.log(`[WebSocket] connected from ${userName} (${ip})`);
   // 全ての入室中のクライアントへ送信
   ws.clients.forEach(client => {
@@ -56,6 +62,28 @@ ws.on('connection', (socket, req) => {
   // 通常メッセージ
   socket.on('message', data => {
     console.log('[WebSocket] message from client: ' + data);
+
+    // bot宛か？
+    if (req.data.startsWith('@bot ')) {
+      const cmdArray = req.data.split(' ');
+      if (cmdArray.length > 1) {
+        req.name = 'bot';
+        const cmd = cmdArray[1];
+        if (cmd === 'date') {
+          req.data = Date();
+        }
+        else if (cmd === 'list') {
+          req.data = '現在の入室者は ' + Object.keys(members).join(', ');
+        }
+        else {
+          return;
+        }
+        socket.send(JSON.stringify(req));
+      }
+      // bot の場合はここで終わり。
+      return;
+    }
+
     // 全ての入室中のクライアントへ返信
     ws.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
@@ -68,6 +96,11 @@ ws.on('connection', (socket, req) => {
   // 退室
   socket.on('close', () => {
     console.log(`[WebSocket] disconnected from ${userName} (${ip})`);
+
+    // メンバーを削除
+    // （クライアントの不正な切断による退室には未対応）
+    delete members[req.name];
+
     // 退室したクライアントを除く全ての入室中のクライアントへ送信
     ws.clients.forEach(client => {
       if (client !== socket && client.readyState === WebSocket.OPEN) {
@@ -77,5 +110,5 @@ ws.on('connection', (socket, req) => {
         }));
       }
     });
-  })
+  });
 });
